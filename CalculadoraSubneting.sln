@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33122.133
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CalculadoraSubneting", "CalculadoraSubneting.csproj", "{CE2443CA-5659-4923-AB78-C0D7EF42D5AD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CE2443CA-5659-4923-AB78-C0D7EF42D5AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE2443CA-5659-4923-AB78-C0D7EF42D5AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE2443CA-5659-4923-AB78-C0D7EF42D5AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE2443CA-5659-4923-AB78-C0D7EF42D5AD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6CB8DBB1-F4C4-4555-B88C-47D5019C9D0A}
+	EndGlobalSection
+EndGlobal
