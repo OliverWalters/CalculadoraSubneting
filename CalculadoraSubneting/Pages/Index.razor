@@ -118,7 +118,7 @@ else
 
             //Aqui separamos la mascara de la ip normal
             string[] a = ip.Split('/');
-            string mascara = a[1];
+            int mascara = int.Parse(a[1]);
             string ipSinMascara = a[0];
 
             mascara += bitsNecesarios;
