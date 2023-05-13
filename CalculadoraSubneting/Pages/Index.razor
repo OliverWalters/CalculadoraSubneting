@@ -1,61 +1,151 @@
 ﻿@page "/"
+@using System.Text.RegularExpressions;
 
 <PageTitle>Calculadora</PageTitle>
 
 
 
 
-		<table class="tabla1">
-			<tr>
-				<td>Dirección Ip/Máscara de red</td>
-				<td><input type="text"></td>
-			</tr>
-			<tr>
-				<td>Número de subredes</td>
-				<td><input @bind="subredes"><!--<button>Change</button>--></td>
-			</tr>
-			<tr>
-				<td>Tamaño de hosts</td>
-				<td>
-				@for(int i =0; i < subredes;i++){
-					<label>Nombre</label><input id="inputName" type="text"><label>Tamaño</label><input id="inputSize" type="text"><br>
-				}
-				</td>
-			</tr>
-			<tr>
-				<td class="submit"colspan="2">
-					<button >Enviar</button>
-				</td>
-			</tr>
-		</table>
+<table class="tabla1">
+    <tr>
+        <td>Dirección Ip/Máscara de red</td>
+        <td><input @bind="ip" type="text"></td>
+    </tr>
+    <tr>
+        <td>Número de subredes</td>
+        <td><input @bind="subredes"><!--<button>Change</button>--></td>
+    </tr>
+    <tr>
+        <td>Tamaño de hosts</td>
+        <td>
+            @*@if (subredes != null)
+            {
+                subredesLista = new Subred[subredes];
+                for(int i = 0; i < subredes;i++)
+                {
+                    subredesLista[i] = new Subred();
+                }
+            }*@
+            <!--Este bucle añade el numero de inputs segun me marque el mismo usuario,en este caso hosts-->
+            @*@for (int i = 0; i < subredes; i++)
+            {
+                <label>Nombre</label>
 
-		<table class="tabla2">
-			<thead>
-				<tr>
-					<th>Nombre</th>
-					<th>Dirección de subred</th>
-					<th>Máscara de subred</th>
-					<th>Rango de direcciones IP asignables</th>
-					<th>Cantidad de hosts disponibles</th>
-					<th>Dirección de broadcast</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr>
-					<td></td>
-					<td></td>
-					<td></td>
-					<td></td>
-					<td></td>
-					<td></td>
-				</tr>
-			</tbody>
+                <input @bind="subredesLista[i].nombreHosts" id="inputName" />*@
+                <label>Tamaño</label>
 
-		</table>
+                <input @bind="tamano" id="inputSize" />
+                @*<br>
+            }*@
+        </td>
+    </tr>
+    <tr>
+        <td class="submit" colspan="2">
+            <button @onclick="Calcular">Enviar</button>
+        </td>
+    </tr>
+</table>
+@if (posible && tamanoPosible)
+{
+    
+    <table class="tabla2">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Dirección de subred</th>
+                <th>Máscara de subred</th>
+                <th>Rango de direcciones IP asignables</th>
+                <th>Cantidad de hosts disponibles</th>
+                <th>Dirección de broadcast</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </tbody>
 
-@code{
-	public string ip;
-	public int subredes;
-	public int hosts;
+    </table>
+}
+else
+{
+    <h1 style="color:red;">Introduce una Ip o tamaño válido</h1>
+}
+
+
+@code {
+    public string ip;
+    public int subredes;
+    public int tamano;
+    public bool posible=true;
+    public bool tamanoPosible = true;
+    //public Subred[] subredesLista;
+
+    //public class Subred
+    //{
+    //    public string nombreHosts;
+    //    public int sizeHosts;
+
+
+    //}
+    public bool Comprobar()
+    {
+        string tresCifras = @"(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)";
+        string dosCifras = @"(?:[1-9]|[12]\d|3[012])$";
+        string filtroRed = $@"{tresCifras}.{tresCifras}.{tresCifras}.{tresCifras}/{dosCifras}";
+        Regex regex = new Regex(filtroRed);//filtro red con su mascara
+        return regex.IsMatch(ip);
+    }
+    public void Calcular()
+    {
+        if(Comprobar())
+        {
+            //Esto comprueba nº de hosts y bits necesarios segun las subredes
+            int subRedesNecesarias = 1;
+            int bitsNecesarios = 0;
+            while (subRedesNecesarias < subredes)
+            {
+                subRedesNecesarias *= 2;
+                bitsNecesarios++;
+            }
+            int tamanoNecesario = 256 / subRedesNecesarias;
+            tamanoPosible = tamano <= tamanoNecesario; //el bool de si es posible o no guarda v si el tamaño k el pasa es <= que el necesario
+
+            //Aqui separamos la mascara de la ip normal
+            string[] a = ip.Split('/');
+            string mascara = a[1];
+            string ipSinMascara = a[0];
+
+            mascara += bitsNecesarios;
+
+            string[] octetos = ipSinMascara.Split('.');
+            string[] octetosBinarios = new string[4];
+            for(int i = 0;i<octetos.Length;i++)
+            {
+                int octetoDecimal = int.Parse(octetos[i]);
+                string numeroBinario = string.Empty;
+                while (octetoDecimal > 0)
+                {
+                    int resto = octetoDecimal % 2;
+                    numeroBinario = resto.ToString() + numeroBinario;
+                    octetoDecimal /= 2;
+                }
+                octetosBinarios[i] = numeroBinario;
+                Console.WriteLine(numeroBinario);
+            }
+
+        }
+        else
+        {
+            posible = false;
+        }
+
+
+    }
 
 }
