@@ -79,7 +79,7 @@
         </thead>
         <tbody>
             
-            @*@for (int i = 0; i < redesResult.Length; i++)
+            @for (int i = 0; i < redesResult.Length; i++)
             {
                 <tr>
                     <td>hola</td>
@@ -89,7 +89,7 @@
                     <td>@hostsResult</td>
                     <td></td>
                 </tr>
-            }*@
+            }
 
         </tbody>
 
@@ -237,6 +237,7 @@ else
         string[] redes = new string[subredes];
         string[] broadcast = new string[subredes];
         string[] rango = new string[subredes];
+        nombresResult = new string[subredes];
         for(int i = 0; i < subredes; i++)
         {
             if (i == 0)
@@ -250,12 +251,13 @@ else
             rango[i] = Suma1(redes[i]) + " - " + Resta1(ipesDecimal[i + 1]);
             broadcast[i] = ipesDecimal[i+1];
             nombresResult[i] = (i + 1).ToString();
+            Console.WriteLine(redes[i] + "//" + rango[i] + "//" + broadcast[i]);
         }
         redesResult = redes;
         broadcastResult = broadcast;
         rangosResult = rango;
 
-
+        
 
     }
 
