@@ -242,14 +242,12 @@ else
             if (i == 0)
             {
                 redes[i] = ipesDecimal[i];
-                rango[i] = Suma1(ipesDecimal[i]) + " - " + Resta1(ipesDecimal[i+1]);
             }
             else
             {
                 redes[i] = Suma1(ipesDecimal[i]);
-                rango[i] = Suma1(redes[i]) + " - " + Resta1(ipesDecimal[i + 1]);
             }
-
+            rango[i] = Suma1(redes[i]) + " - " + Resta1(ipesDecimal[i + 1]);
             broadcast[i] = ipesDecimal[i+1];
             nombresResult[i] = (i + 1).ToString();
         }
