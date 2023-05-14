@@ -4,7 +4,7 @@
 <PageTitle>Calculadora</PageTitle>
 
 
-
+<input @bind="VLSM" type="checkbox" />Calculadora VLSM
 
 <table class="tabla1">
     <tr>
@@ -18,6 +18,13 @@
     <tr>
         <td>Tamaño de hosts</td>
         <td>
+            @if(!VLSM)
+            {
+                <label>Tamaño</label>
+                <input @bind="tamano" id="inputSize" />
+            }
+            else
+            {
             @*@if (subredes != null)
             {
                 subredesLista = new Subred[subredes];
@@ -25,23 +32,32 @@
                 {
                     subredesLista[i] = new Subred();
                 }
-            }*@
+            }
             <!--Este bucle añade el numero de inputs segun me marque el mismo usuario,en este caso hosts-->
-            @*@for (int i = 0; i < subredes; i++)
+            @for (int i = 0; i < subredes; i++)
             {
                 <label>Nombre</label>
 
-                <input @bind="subredesLista[i].nombreHosts" id="inputName" />*@
+                <input @bind="subredesLista[i].nombreHosts" id="inputName" />
                 <label>Tamaño</label>
 
                 <input @bind="tamano" id="inputSize" />
-                @*<br>
+                <br>
             }*@
+            }
+            
         </td>
     </tr>
     <tr>
         <td class="submit" colspan="2">
-            <button @onclick="Calcular">Enviar</button>
+            @if (!VLSM)
+            {
+                <button @onclick="Calcular">Enviar</button>
+            }
+            else
+            {
+                    <button @onclick="Calcular">Enviar VLSM</button>
+            }
         </td>
     </tr>
 </table>
@@ -74,7 +90,7 @@
 }
 else
 {
-    <h1 style="color:red;">Introduce una Ip o tamaño válido</h1>
+    <h1 class="error">Introduce una dirección Ip o un tamaño válido</h1>
 }
 
 
@@ -82,8 +98,9 @@ else
     public string ip;
     public int subredes;
     public int tamano;
-    public bool posible=true;
+    public bool posible = true;
     public bool tamanoPosible = true;
+    public bool VLSM;
     //public Subred[] subredesLista;
 
     //public class Subred
@@ -98,13 +115,15 @@ else
         string tresCifras = @"(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)";
         string dosCifras = @"(?:[1-9]|[12]\d|3[012])$";
         string filtroRed = $@"{tresCifras}.{tresCifras}.{tresCifras}.{tresCifras}/{dosCifras}";
-        Regex regex = new Regex(filtroRed);//filtro red con su mascara
-        return regex.IsMatch(ip);
+        Regex red = new Regex(filtroRed);//filtro red con su mascara
+
+        return red.IsMatch(ip);
     }
     public void Calcular()
     {
         if(Comprobar())
         {
+            posible = true;
             //Esto comprueba nº de hosts y bits necesarios segun las subredes
             int subRedesNecesarias = 1;
             int bitsNecesarios = 0;
@@ -113,8 +132,8 @@ else
                 subRedesNecesarias *= 2;
                 bitsNecesarios++;
             }
-            int tamanoNecesario = 256 / subRedesNecesarias;
-            tamanoPosible = tamano <= tamanoNecesario; //el bool de si es posible o no guarda v si el tamaño k el pasa es <= que el necesario
+            int tamanoMaximo = 256 / subRedesNecesarias;
+            tamanoPosible = tamano <= tamanoMaximo; //el bool de si es posible o no guarda v si el tamaño k el pasa es <= que el necesario
 
             //Aqui separamos la mascara de la ip normal
             string[] a = ip.Split('/');
@@ -135,9 +154,26 @@ else
                     numeroBinario = resto.ToString() + numeroBinario;
                     octetoDecimal /= 2;
                 }
-                octetosBinarios[i] = numeroBinario;
-                Console.WriteLine(numeroBinario);
+                octetosBinarios[i] = numeroBinario.PadLeft(8,'0');//esto rellena de 0 a la izquierda
             }
+
+            string octetosBinariosJuntos = string.Empty;
+            foreach (string octeto in octetosBinarios)//junta cada octeto a un solo string
+            {
+                octetosBinariosJuntos += octeto;
+            }
+
+            int numeroBitsModificar = 32 - mascara;//coge los bits que tenemos para hosts
+            string bitsParaHosts = string.Empty;
+            for (int i = 0; i < numeroBitsModificar; i++)//llena todos los bits de hosts de unos para luego pasar a decimal y ver el total de hsots
+            {
+                bitsParaHosts += 1;
+            }
+
+            int totalHosts = PasarADecimal(bitsParaHosts) /*  +1  */;// comprobar si hay que sumar uno ya que no es lo mismo 2^8 que 8bits lleno de 1 a decimal
+            int hostsCadaSubred = totalHosts / subredes;
+           
+
 
         }
         else
@@ -147,5 +183,44 @@ else
 
 
     }
+    public void CalcularVLSM()
+    {
+        if (Comprobar())
+        {
+            posible = true;
 
+
+
+
+        }
+        else
+        {
+            posible = false;
+        }
+
+
+    }
+    public int PasarADecimal(string numeroBinario)
+    {
+        int decimalNumber = 0;
+
+        for (int i = 0; i < numeroBinario.Length; i++)
+        {
+            decimalNumber += int.Parse(numeroBinario[i].ToString()) * (int)Math.Pow(2, numeroBinario.Length - i - 1);
+        }
+        return decimalNumber;
+    }
+
+    public string PasarABinario(int numero)
+    {
+        string numeroBinario = ""; // cadena vacía para almacenar el número binario
+
+        while (numero > 0) // mientras el número decimal sea mayor que cero
+        {
+            int resto = numero % 2; // calcula el resto de la división por 2
+            numeroBinario = resto.ToString() + numeroBinario; // agrega el dígito al número binario
+            numero /= 2; // divide el número decimal entre 2
+        }
+        return numeroBinario;
+    }
 }
