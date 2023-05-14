@@ -147,14 +147,8 @@ else
             for(int i = 0;i<octetos.Length;i++)
             {
                 int octetoDecimal = int.Parse(octetos[i]);
-                string numeroBinario = string.Empty;
-                while (octetoDecimal > 0)
-                {
-                    int resto = octetoDecimal % 2;
-                    numeroBinario = resto.ToString() + numeroBinario;
-                    octetoDecimal /= 2;
-                }
-                octetosBinarios[i] = numeroBinario.PadLeft(8,'0');//esto rellena de 0 a la izquierda
+                
+                octetosBinarios[i] = PasarABinario(octetoDecimal).PadLeft(8,'0');//esto rellena de 0 a la izquierda
             }
 
             string octetosBinariosJuntos = string.Empty;
@@ -171,7 +165,7 @@ else
             }
 
             int totalHosts = PasarADecimal(bitsParaHosts) /*  +1  */;// comprobar si hay que sumar uno ya que no es lo mismo 2^8 que 8bits lleno de 1 a decimal
-            int hostsCadaSubred = totalHosts / subredes;
+            int hostsCadaSubred = totalHosts / subredes;//host por cada subres
            
 
 
@@ -202,11 +196,11 @@ else
     }
     public int PasarADecimal(string numeroBinario)
     {
-        int decimalNumber = 0;
+        int decimalNumber = 0;//numero empieza en 0
 
-        for (int i = 0; i < numeroBinario.Length; i++)
+        for (int i = 0; i < numeroBinario.Length; i++)//recorre numero binario
         {
-            decimalNumber += int.Parse(numeroBinario[i].ToString()) * (int)Math.Pow(2, numeroBinario.Length - i - 1);
+            decimalNumber += int.Parse(numeroBinario[i].ToString()) * (int)Math.Pow(2, numeroBinario.Length - i - 1);//cada binario lo multiplica por su valor
         }
         return decimalNumber;
     }
