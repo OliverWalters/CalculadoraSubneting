@@ -7,296 +7,309 @@
 <input @bind="VLSM" type="checkbox" />Calculadora VLSM
 
 <table class="tabla1">
-    <tr>
-        <td>Dirección Ip/Máscara de red</td>
-        <td><input @bind="ip" type="text"></td>
-    </tr>
-    <tr>
-        <td>Número de subredes</td>
-        <td>
-            @if (!VLSM)
-            {
-                <input @bind="subredes">
-            }
-            else
-            {
-                <input @bind="subredes">
-                <button @onclick="DarTamano">Change</button>
-            }
-        </td>
-    </tr>
-    <tr>
-        <td>Tamaño de hosts</td>
-        <td>
-            @if (!VLSM)
-            {
-                <label>Tamaño</label>
-                <input @bind="tamano" id="inputSize" />
-            }
-            else
-            {
-                <!--Este bucle añade el numero de inputs segun me marque el mismo usuario,en este caso hosts-->
-                @for (int i = 0; i < subredes && tamanoDado; i++)
-                {
-                    <label>Nombre</label>
+	<tr>
+		<td>Dirección Ip/Máscara de red</td>
+		<td><input @bind="ip" type="text"></td>
+	</tr>
+	<tr>
+		<td>Número de subredes</td>
+		<td>
+				<input @bind="subredes">
+				<button @onclick="Actualiza">Change</button>
+		</td>
+	</tr>
+	<tr>
+		<td>Tamaño de hosts</td>
+		<td>
+			@for (int i = 0; i < listaSubredes.Count; i++)
+			{
+						Subred subred = listaSubredes[i];
+						<label>Nombre</label>
+						<input @bind="subred.Nombre"  id="inputName" />
 
-                    <input @bind="listaNombres[i]" @oninput="@(e=> listaNombres[i] = e.Value.ToString())" id="inputName" />
-                    <label>Tamaño</label>
+						<label>Tamaño</label>
 
-                    <input @bind="listaTamanos[i]" @oninput="@(e=> listaTamanos[i] = e.Value.ToString())" id="inputSize" />
-                    <br>
-                }
-            }
+							<input @bind="subred.Tamano" id="inputSize" />
+						<br>
+			}
 
-        </td>
-    </tr>
-    <tr>
-        <td class="submit" colspan="2">
-            @if (!VLSM)
-            {
-                <button @onclick="Calcular">Enviar</button>
-            }
-            else
-            {
-                <button @onclick="Calcular">Enviar VLSM</button>
-            }
-        </td>
-    </tr>
+		</td>
+	</tr>
+	<tr>
+		<td class="submit" colspan="2">
+			@if (!VLSM)
+			{
+					<button @onclick="Calcular">Enviar</button>
+			}
+			else
+			{
+					<button @onclick="Calcular">Enviar VLSM</button>
+			}
+		</td>
+	</tr>
 </table>
 @if (posible && tamanoPosible)
 {
 
-    <table class="tabla2">
-        <thead>
-            <tr>
-                <th>Nombre</th>
-                <th>Dirección de subred</th>
-                <th>Máscara de subred</th>
-                <th>Rango de direcciones IP asignables</th>
-                <th>Cantidad de hosts disponibles</th>
-                <th>Dirección de broadcast</th>
-            </tr>
-        </thead>
-        <tbody>
-            
-            @for (int i = 0; i < redesResult.Length; i++)
-            {
-                <tr>
-                    <td>hola</td>
-                    <td>@redesResult[i]</td>
-                    <td>@mascaraResult</td>
-                    <td></td>
-                    <td>@hostsResult</td>
-                    <td></td>
-                </tr>
-            }
+	<table class="tabla2">
+		<thead>
+			<tr>
+				<th>Nombre</th>
+				<th>Dirección de subred</th>
+				<th>Máscara de subred</th>
+				<th>Rango de direcciones IP asignables</th>
+				<th>Cantidad de hosts disponibles</th>
+				<th>Dirección de broadcast</th>
+			</tr>
+		</thead>
+		<tbody>
+			@if (tamanoDado)
+			{
+				@for (int i = 0; i < redesResult.Length; i++)
+				{
+									<tr>
+										<td>@nombresResult[i]</td>
+										<td>@redesResult[i]</td>
+										<td>@mascaraResult</td>
+										<td></td>
+										<td>@hostsResult</td>
+										<td></td>
+									</tr>
+				}
+			}
+			
 
-        </tbody>
+			</tbody>
 
-    </table>
+		</table>
 }
 else
 {
-    <h1 class="error">Introduce una dirección Ip o un tamaño válido</h1>
+		<h1 class="error">Introduce una dirección Ip o un tamaño válido</h1>
 }
 
 
 @code {
-    public string ip;
-    public int subredes;
-    public int tamano;
-    public bool posible = true; 
-    public bool tamanoPosible = true;
-    public bool VLSM;
-    public bool tamanoDado;
-    public string[] listaNombres;
-    public string[] listaTamanos;
-    const int MASCARA_MAX = 32;
-    const int TAMANO_BYTE = 8;
-    const int DECIMAL_BYTE = 255;
+	private List<Subred> listaSubredes = new List<Subred>();
+	public string ip;
+	public int subredes;
+	public bool posible = true;
+	public bool tamanoPosible = true;
+	public bool VLSM;
+	public bool tamanoDado;
+	public string[] listaNombres;
+	public string[] listaTamanos;
+	const int MASCARA_MAX = 32;
+	const int TAMANO_BYTE = 8;
+	const int DECIMAL_BYTE = 255;
 
-    //variables para la tabla de resultados
-    public string[] nombresResult;
-    public string[] redesResult;
-    public string[] rangosResult;
-    public string[] broadcastResult;
-    public string hostsResult;
-    public string mascaraResult;
+	//variables para la tabla de resultados
+	public string[] nombresResult;
+	public string[] redesResult;
+	public string[] rangosResult;
+	public string[] broadcastResult;
+	public string hostsResult;
+	public string mascaraResult;
 
-    public void DarTamano()
-    {
-        tamanoDado = true;
-        listaNombres = new string[subredes];
-        listaTamanos = new string[subredes];
-    }
+	private class Subred
+	{
+		public string Nombre { get; set; }
+		public int Tamano { get; set; }
+	}
 
-    public bool Comprobar()
-    {
-        string tresCifras = @"(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)";
-        string dosCifras = @"(?:[1-9]|[12]\d|3[012])$";
-        string filtroRed = $@"{tresCifras}.{tresCifras}.{tresCifras}.{tresCifras}/{dosCifras}";
-        Regex red = new Regex(filtroRed);//filtro red con su mascara
+	public void DarTamano()
+	{
+		tamanoDado = true;
+		listaNombres = new string[subredes];
+		listaTamanos = new string[subredes];
+	}
 
-        return red.IsMatch(ip);
-    }
-    public void Calcular()
-    {
-        if (Comprobar())
-        {
-            posible = true;
-            //Esto comprueba nº de hosts y bits necesarios segun las subredes
-            int subRedesNecesarias = 1;
-            int bitsNecesarios = 0;
-            while (subRedesNecesarias < subredes)
-            {
-                subRedesNecesarias *= 2;
-                bitsNecesarios++;
-            }
-            int tamanoMaximo = DECIMAL_BYTE + 1 / subRedesNecesarias;
-            tamanoPosible = tamano <= tamanoMaximo; //el bool de si es posible o no guarda v si el tamaño k el pasa es <= que el necesario
+	public bool Comprobar()
+	{
+		string tresCifras = @"(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)";
+		string dosCifras = @"(?:[1-9]|[12]\d|3[012])$";
+		string filtroRed = $@"{tresCifras}.{tresCifras}.{tresCifras}.{tresCifras}/{dosCifras}";
+		Regex red = new Regex(filtroRed);//filtro red con su mascara
 
-            //Aqui separamos la mascara de la ip normal
-            string[] a = ip.Split('/');
-            int mascara = int.Parse(a[1]);
-            string ipSinMascara = a[0];
+		return red.IsMatch(ip);
+	}
+	public void Calcular()
+	{
+		if (Comprobar())
+		{
+			posible = true;
+			//Esto comprueba nº de hosts y bits necesarios segun las subredes
+			int subRedesNecesarias = 1;
+			int bitsNecesarios = 0;
+			while (subRedesNecesarias < subredes)
+			{
+				subRedesNecesarias *= 2;
+				bitsNecesarios++;
+			}
+			int tamanoMaximo = DECIMAL_BYTE + 1 / subRedesNecesarias;
+			tamanoPosible = listaSubredes.Max(x=>x.Tamano) <= tamanoMaximo; //el bool de si es posible o no guarda v si el tamaño k el pasa es <= que el necesario
 
-            mascara += bitsNecesarios;
+			//Aqui separamos la mascara de la ip normal
+			string[] a = ip.Split('/');
+			int mascara = int.Parse(a[1]);
+			string ipSinMascara = a[0];
 
-            string[] octetos = ipSinMascara.Split('.');
-            string[] octetosBinarios = new string[4];
-            for (int i = 0; i < octetos.Length; i++)
-            {
-                int octetoDecimal = int.Parse(octetos[i]);
+			mascara += bitsNecesarios;
 
-                octetosBinarios[i] = PasarABinario(octetoDecimal).PadLeft(TAMANO_BYTE, '0');//esto rellena de 0 a la izquierda
-            }
+			string[] octetos = ipSinMascara.Split('.');
+			string[] octetosBinarios = new string[4];
+			for (int i = 0; i < octetos.Length; i++)
+			{
+				int octetoDecimal = int.Parse(octetos[i]);
 
-            string octetosBinariosJuntos = string.Empty;
-            foreach (string octeto in octetosBinarios)//junta cada octeto a un solo string
-            {
-                octetosBinariosJuntos += octeto;
-            }
-            int numeroBitsHosts = MASCARA_MAX - mascara;//coge los bits que tenemos para hosts
+				octetosBinarios[i] = PasarABinario(octetoDecimal).PadLeft(TAMANO_BYTE, '0');//esto rellena de 0 a la izquierda
+			}
 
-            int totalHosts = int.Parse(Math.Pow(2, numeroBitsHosts + bitsNecesarios).ToString());//PasarADecimal(bitsParaHosts)+1 ;// comprobar si hay que sumar uno ya que no es lo mismo 2^8 que 8bits lleno de 1 a decimal
+			string octetosBinariosJuntos = string.Empty;
+			foreach (string octeto in octetosBinarios)//junta cada octeto a un solo string
+			{
+				octetosBinariosJuntos += octeto;
+			}
+			int numeroBitsHosts = MASCARA_MAX - mascara;//coge los bits que tenemos para hosts
 
-            int hostsCadaSubred = totalHosts / subRedesNecesarias;//host por cada subres
+			int totalHosts = int.Parse(Math.Pow(2, numeroBitsHosts + bitsNecesarios).ToString());//PasarADecimal(bitsParaHosts)+1 ;// comprobar si hay que sumar uno ya que no es lo mismo 2^8 que 8bits lleno de 1 a decimal
 
-            string[] ipesBinario = new string[subRedesNecesarias + 1];
-            for (int i = 0; i < ipesBinario.Length; i++)
-            {
-                //Esto mete en ipes todos los numeros juntos(mascara y numero de hosts)
-                ipesBinario[i] = octetosBinariosJuntos.Substring(0, mascara - bitsNecesarios) + PasarABinario(hostsCadaSubred * i - 1).PadLeft(numeroBitsHosts + bitsNecesarios, '0');
+			int hostsCadaSubred = totalHosts / subRedesNecesarias;//host por cada subres
 
-            }
+			string[] ipesBinario = new string[subRedesNecesarias + 1];
+			for (int i = 0; i < ipesBinario.Length; i++)
+			{
+				//Esto mete en ipes todos los numeros juntos(mascara y numero de hosts)
+				ipesBinario[i] = octetosBinariosJuntos.Substring(0, mascara - bitsNecesarios) + PasarABinario(hostsCadaSubred * i - 1).PadLeft(numeroBitsHosts + bitsNecesarios, '0');
 
-            string[] ipesDecimal = new string[subRedesNecesarias + 1];//se guardaran las  ips en decimal
-            for (int i = 0; i < ipesDecimal.Length; i++)
-            {
-                for (int j = 0; j < MASCARA_MAX; j += TAMANO_BYTE)
-                {
-                    ipesDecimal[i] += PasarADecimal(ipesBinario[i].Substring(j, TAMANO_BYTE)).ToString() + '.';//te pasa a decimal cada 8 te pone un .
+			}
 
-                }
-                ipesDecimal[i] = ipesDecimal[i].Substring(0, ipesDecimal[i].Length - 1);//te quita el punto del final
-            }
+			string[] ipesDecimal = new string[subRedesNecesarias + 1];//se guardaran las  ips en decimal
+			for (int i = 0; i < ipesDecimal.Length; i++)
+			{
+				for (int j = 0; j < MASCARA_MAX; j += TAMANO_BYTE)
+				{
+					ipesDecimal[i] += PasarADecimal(ipesBinario[i].Substring(j, TAMANO_BYTE)).ToString() + '.';//te pasa a decimal cada 8 te pone un .
 
-            GuardarDatos(mascara, ipesDecimal, hostsCadaSubred, subRedesNecesarias);
-        }
-        else
-        {
-            posible = false;
-        }
+				}
+				ipesDecimal[i] = ipesDecimal[i].Substring(0, ipesDecimal[i].Length - 1);//te quita el punto del final
+			}
 
-
-    }
-    public void CalcularVLSM()
-    {
-        if (Comprobar())
-        {
-            posible = true;
+			GuardarDatos(mascara, ipesDecimal, hostsCadaSubred, subRedesNecesarias);
+		}
+		else
+		{
+			posible = false;
+		}
 
 
+	}
 
-
-        }
-        else
-        {
-            posible = false;
-        }
-
-
-    }
-
-
-    public void GuardarDatos(int mascara, string[] ipesDecimal, int hosts,int subredes)
-    {
-        mascaraResult = mascara.ToString();
-        hostsResult = hosts.ToString();
-
-        string[] redes = new string[subredes];
-        string[] broadcast = new string[subredes];
-        string[] rango = new string[subredes];
-        nombresResult = new string[subredes];
-        for(int i = 0; i < subredes; i++)
-        {
-            if (i == 0)
-            {
-                redes[i] = ipesDecimal[i];
-            }
-            else
-            {
-                redes[i] = Suma1(ipesDecimal[i]);
-            }
-            rango[i] = Suma1(redes[i]) + " - " + Resta1(ipesDecimal[i + 1]);
-            broadcast[i] = ipesDecimal[i+1];
-            nombresResult[i] = (i + 1).ToString();
-            Console.WriteLine(redes[i] + "//" + rango[i] + "//" + broadcast[i]);
-        }
-        redesResult = redes;
-        broadcastResult = broadcast;
-        rangosResult = rango;
-
-        
-
-    }
-
-    public string Suma1(string ip)
-    {
-        string[] octetos = ip.Split('.');
-        octetos[3] = (int.Parse(octetos[3]) + 1).ToString();
-        return string.Join('.', octetos);
-    }
-    public string Resta1(string ip)
-    {
-        string[] octetos = ip.Split('.');
-        octetos[3] = (int.Parse(octetos[3]) - 1).ToString();
-        return string.Join('.', octetos);
-    }
+	private void Actualiza()
+	{
+		if (subredes > listaSubredes.Count)
+		{
+			for (int i = listaSubredes.Count; i < subredes; i++)
+			{
+				listaSubredes.Add(new Subred { Nombre = "" });
+			}
+		}
+		else
+		{
+			for (int i = subredes - 1; i < listaSubredes.Count; i++)
+			{
+				listaSubredes.Remove(listaSubredes[i]);
+			}
+		}
+		tamanoDado = true;
+	}
+	public void CalcularVLSM()
+	{
+		if (Comprobar())
+		{
+			posible = true;
 
 
 
-    public int PasarADecimal(string numeroBinario)
-    {
-        int decimalNumber = 0;//numero empieza en 0
 
-        for (int i = 0; i < numeroBinario.Length; i++)//recorre numero binario
-        {
-            decimalNumber += int.Parse(numeroBinario[i].ToString()) * (int)Math.Pow(2, numeroBinario.Length - i - 1);//cada binario lo multiplica por su valor
-        }
-        return decimalNumber;
-    }
+		}
+		else
+		{
+			posible = false;
+		}
 
-    public string PasarABinario(int numero)
-    {
-        string numeroBinario = ""; // cadena vacía para almacenar el número binario
 
-        while (numero > 0) // mientras el número decimal sea mayor que cero
-        {
-            int resto = numero % 2; // calcula el resto de la división por 2
-            numeroBinario = resto.ToString() + numeroBinario; // agrega el dígito al número binario
-            numero /= 2; // divide el número decimal entre 2
-        }
-        return numeroBinario;
-    }
+	}
+
+
+	public void GuardarDatos(int mascara, string[] ipesDecimal, int hosts, int subredes)
+	{
+		mascaraResult = mascara.ToString();
+		hostsResult = hosts.ToString();
+
+		string[] redes = new string[subredes];
+		string[] broadcast = new string[subredes];
+		string[] rango = new string[subredes];
+		nombresResult = new string[subredes];
+		for (int i = 0; i < subredes; i++)
+		{
+			if (i == 0)
+			{
+				redes[i] = ipesDecimal[i];
+			}
+			else
+			{
+				redes[i] = Suma1(ipesDecimal[i]);
+			}
+			rango[i] = Suma1(redes[i]) + " - " + Resta1(ipesDecimal[i + 1]);
+			broadcast[i] = ipesDecimal[i + 1];
+			nombresResult[i] = (i + 1).ToString();
+			Console.WriteLine(redes[i] + "//" + rango[i] + "//" + broadcast[i]);
+		}
+		redesResult = redes;
+		broadcastResult = broadcast;
+		rangosResult = rango;
+
+
+
+	}
+
+	public string Suma1(string ip)
+	{
+		string[] octetos = ip.Split('.');
+		octetos[3] = (int.Parse(octetos[3]) + 1).ToString();
+		return string.Join('.', octetos);
+	}
+	public string Resta1(string ip)
+	{
+		string[] octetos = ip.Split('.');
+		octetos[3] = (int.Parse(octetos[3]) - 1).ToString();
+		return string.Join('.', octetos);
+	}
+
+
+
+	public int PasarADecimal(string numeroBinario)
+	{
+		int decimalNumber = 0;//numero empieza en 0
+
+		for (int i = 0; i < numeroBinario.Length; i++)//recorre numero binario
+		{
+			decimalNumber += int.Parse(numeroBinario[i].ToString()) * (int)Math.Pow(2, numeroBinario.Length - i - 1);//cada binario lo multiplica por su valor
+		}
+		return decimalNumber;
+	}
+
+	public string PasarABinario(int numero)
+	{
+		string numeroBinario = ""; // cadena vacía para almacenar el número binario
+
+		while (numero > 0) // mientras el número decimal sea mayor que cero
+		{
+			int resto = numero % 2; // calcula el resto de la división por 2
+			numeroBinario = resto.ToString() + numeroBinario; // agrega el dígito al número binario
+			numero /= 2; // divide el número decimal entre 2
+		}
+		return numeroBinario;
+	}
 }
