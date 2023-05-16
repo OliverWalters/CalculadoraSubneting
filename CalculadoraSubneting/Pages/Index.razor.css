@@ -30,9 +30,8 @@ label {
 }
 
 .tabla2 {
-    margin: auto;
-    text-align: left;
-    margin-top: 50px;
+    text-align: center;
+    margin:50px auto 70px auto;
 }
 
 .error{
