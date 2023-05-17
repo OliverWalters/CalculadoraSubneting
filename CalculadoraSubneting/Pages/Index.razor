@@ -52,30 +52,47 @@
 {
 	@if (calculado)
 	{
-			<table class="tabla2">
-				<thead>
-					<tr>
-						<th>Nombre</th>
-						<th>Dirección de subred</th>
-						<th>Máscara de subred</th>
-						<th>Rango de direcciones IP asignables</th>
-						<th>Cantidad de hosts disponibles</th>
-						<th>Dirección de broadcast</th>
-					</tr>
-				</thead>
-				<tbody>
-
-				@for (int i = 0; i < redesResult.Length; i++)
+		<table class="tabla2">
+			<thead>
+				<tr>
+					<th>Nombre</th>
+					<th>Dirección de subred</th>
+					<th>Máscara de subred</th>
+					<th>Rango de direcciones IP asignables</th>
+					<th>Cantidad de hosts disponibles</th>
+					<th>Dirección de broadcast</th>
+				</tr>
+			</thead>
+			<tbody>
+				@if (!VLSM)
 				{
-												<tr>
-													<td>@nombresResult[i]</td>
-													<td>@redesResult[i]</td>
-													<td>@mascaraResult</td>
-													<td>@rangosResult[i]</td>
-													<td>@hostsResult</td>
-													<td>@broadcastResult[i]</td>
-												</tr>
+					@for (int i = 0; i < redesResult.Length; i++)
+					{
+																<tr>
+																	<td>@nombresResult[i]</td>
+																	<td>@redesResult[i]</td>
+																	<td>@mascaraResult</td>
+																	<td>@rangosResult[i]</td>
+																	<td>@hostsResult</td>
+																	<td>@broadcastResult[i]</td>
+																</tr>
+					}
 				}
+				else
+				{
+					@for (int i = 0; i < redesResult.Length; i++)
+					{
+																				<tr>
+																					<td>@nombresResultVLSM[i]</td>
+																					<td>@redesResult[i]</td>
+																					<td>@mascaraResultVLSM[i]</td>
+																					<td>@rangosResult[i]</td>
+																					<td>@hostsResultVLSM[i]</td>
+																					<td>@broadcastResult[i]</td>
+																				</tr>
+					}
+				}
+
 
 
 
@@ -109,6 +126,9 @@ else
 	public string[] broadcastResult;
 	public string hostsResult;
 	public string mascaraResult;
+	public string[] mascaraResultVLSM;
+	public List<string> hostsResultVLSM;
+	public List<string> nombresResultVLSM;
 
 	private class Subred
 	{
@@ -228,6 +248,13 @@ else
 			int mascaraInicial = int.Parse(a[1]);
 			string ipSinMascara = a[0];
 
+			int hostTotales = 0;
+			foreach(var item in listaSubredes)
+			{
+				hostTotales += item.Tamano + 2;
+			}
+			tamanoPosible = hostTotales < Math.Pow(2, MASCARA_MAX - mascaraInicial);//suma todos los hosts y ve si caben en la mascara que tenemos
+
 			foreach (var item in ipSinMascara.Split('.'))
 			{
 				ipSeparada.Add(item);
@@ -262,40 +289,122 @@ else
 			List<int> hosts = new List<int>();
 			foreach(var item in listaSubredes)
 			{
-				hosts.Add(item.Tamano);
+				hosts.Add(item.Tamano+2);
 			}
-			int hostMayor = hosts.Max(x => x);//cogemos el siguiente host mas grande y lo borramos
-			hosts.Remove(hosts.Max(x => x));
-			int bitsHostMayor = CalcularPotencia(hostMayor);//calcula los bits necesarios para el host
 
-			ipsLibres.OrderBy(x => PasarADecimal(x));//ordenamos la lista de ips libres para coger el mas pequño en cada interaccion
-			string ipLibreMenor = string.Empty;
-			bool cogido = false;
 
-			for (int i = 0; i < ipsLibres.Count && !cogido; i++)//bucle para coger la iplibre con menos tamaño pero que quepa y borrarlo de la lista
+
+			int cantidadHosts = hosts.Count;
+			for (int k = 0; k < cantidadHosts; k++)
 			{
-				int contadorCeros = 0;
-				for (int j = ipsLibres[i].Length - 1; j >= 0; j--)//contador de ceros a la derecha para ver si caben los bits de host en la ip libre
+				int hostMayor = hosts.Max(x => x);//cogemos el siguiente host mas grande y lo borramos
+				hosts.Remove(hosts.Max(x => x));
+
+				int bitsHostMayor = CalcularPotencia(hostMayor);//calcula los bits necesarios para el host
+
+				ipsLibres.OrderBy(x => PasarADecimal(x));//ordenamos la lista de ips libres para coger el mas pequño en cada interaccion
+
+
+				string ipLibreMenor = string.Empty;
+				bool cogido = false;
+				for (int i = 0; i < ipsLibres.Count && !cogido; i++)//bucle para coger la iplibre con menos tamaño pero que quepa y borrarlo de la lista
 				{
-					if (ipsLibres[i][j] == '0')
+					int contadorCeros = 0;
+					for (int j = ipsLibres[i].Length - 1; j >= 0; j--)//contador de ceros a la derecha para ver si caben los bits de host en la ip libre
 					{
-						contadorCeros++;
+						if (ipsLibres[i][j] == '0')
+						{
+							contadorCeros++;
+						}
+					}
+					if (contadorCeros >= bitsHostMayor)
+					{
+						ipLibreMenor = ipsLibres[i];
+						ipsLibres.Remove(ipsLibres[i]);
+						cogido = true;
 					}
 				}
-				if (contadorCeros >= bitsHostMayor)
+
+				string binarioDeHosts = string.Empty;
+				for (int i = 0; i < bitsHostMayor; i++)//depende del tamaño que necesite(bits) lo rellena de 1s
 				{
-					ipLibreMenor = ipsLibres[i];
-					ipsLibres.Remove(ipsLibres[i]);
-					cogido = true;
+					binarioDeHosts += "1";
+				}
+
+				string substring2 = ipBinaria.Substring(0, ipBinaria.Length - bitsParaHostsYSubred);
+				string substring3 = (substring2 + ipLibreMenor).Substring(0, ipBinaria.Length - bitsHostMayor);
+				string ipBroadcast = substring3 + binarioDeHosts;
+				ipsResult.Add(ipBroadcast);//guardar en una lista resultado, masacaraBinario + iplibremenos + binariohost
+
+				string substring4 = ipLibreMenor.Substring(0, ipLibreMenor.Length - bitsHostMayor);
+				string paraSiguienteLibre = substring4 + binarioDeHosts;
+
+				string siguienteLibre = PasarABinario(PasarADecimal(paraSiguienteLibre) + 1).PadLeft(bitsParaHostsYSubred, '0');//esto te da el siguiente libre
+
+				ipsLibres.Add(siguienteLibre);//añade a la lista de ips libres
+
+
+				int posicionUltimoUno = siguienteLibre.LastIndexOf("1");//te calcula si en esta interaccion ha dejado mas ips libres
+				string sinUltimoUno = string.Empty;
+				for (int i = 0; i < siguienteLibre.Length; i++)
+				{
+					if (i == posicionUltimoUno + 1)
+					{
+						sinUltimoUno += "0";
+					}
+					sinUltimoUno += siguienteLibre[i];
+				}
+				int posicionPenultimoUno = siguienteLibre.LastIndexOf("1");
+				int vecesRepetirBucle = posicionUltimoUno - posicionPenultimoUno;
+
+				for (int j = 0; j < vecesRepetirBucle; j++)//si ha dejado mas ips libres aqui las calculamos y las añadimos a la lista de ipslibres
+				{
+					string calculoDisponible = string.Empty;
+					int primerUno = siguienteLibre.LastIndexOf("1");
+					for (int i = 0; i < siguienteLibre.Length; i++)
+					{
+						if (siguienteLibre[i] == '1')
+						{
+							if (i == primerUno)
+							{
+								calculoDisponible += 0;
+							}
+							else
+							{
+								calculoDisponible += "1";
+							}
+						}
+						else
+						{
+							if (i == primerUno - 1)
+							{
+								if (siguienteLibre[i] != '1')
+								{
+									calculoDisponible += 1;
+								}
+							}
+							else
+							{
+								calculoDisponible += '0';
+							}
+						}
+					}
+					ipsLibres.Add(calculoDisponible);
 				}
 			}
 
-			string binarioDeHosts = string.Empty;
-
-			for (int i = 0; i < bitsHostMayor; i++)//depende del tamaño que necesite(bits) lo rellena de 1s
+			string[] ipesDecimal = new string[listaSubredes.Count + 1];
+			for (int i = 0; i < ipesDecimal.Length; i++)
 			{
-				binarioDeHosts += "1";
+				for (int j = 0; j < MASCARA_MAX; j += TAMANO_BYTE)
+				{
+					ipesDecimal[i] += PasarADecimal(ipsResult[i].Substring(j, TAMANO_BYTE)).ToString() + '.';//te pasa a decimal cada 8 te pone un .
+
+				}
+				ipesDecimal[i] = ipesDecimal[i].Substring(0, ipesDecimal[i].Length - 1);//te quita el punto del final
 			}
+			//listasubred ordenar
+			GuardarDatosVLSM(ipesDecimal);
 		}
 		else
 		{
@@ -315,6 +424,50 @@ else
 			potencia++;
 		}
 		return potencia;
+	}
+	public void GuardarDatosVLSM(string[] ipesDecimal)
+	{
+		listaSubredes.OrderBy(x=>x);
+		string[] redes = new string[subredes];//creamos arrays con un tamaño
+		string[] broadcast = new string[subredes];
+		string[] rango = new string[subredes];
+		string[] nombres = new string[subredes];
+		string[] mascara = new string[subredes];
+		string[] hosts = new string[subredes];
+		nombresResultVLSM = new List<string>();
+		hostsResultVLSM = new List<string>();
+		Dictionary<string, string> nombreYtamano = new Dictionary<string, string>();
+		for (int i = 0; i < subredes; i++)
+		{
+			if (i == 0)
+			{
+				redes[i] = ipesDecimal[i];//el primero ya que es la 00
+			}
+			else
+			{
+				redes[i] = Suma1(ipesDecimal[i]);
+			}
+
+			rango[i] = Suma1(redes[i]) + " - " + Resta1(ipesDecimal[i + 1]);
+
+			broadcast[i] = ipesDecimal[i + 1];
+
+			nombreYtamano.Add(listaSubredes[i].Nombre, Math.Pow(2, CalcularPotencia(listaSubredes[i].Tamano)).ToString());
+			mascara[i] =(MASCARA_MAX - CalcularPotencia(listaSubredes[i].Tamano)).ToString();
+
+		}
+		mascaraResultVLSM = mascara.ToList().OrderBy(x => int.Parse(x)).ToArray();
+		foreach (var item in nombreYtamano.OrderByDescending(x => int.Parse(x.Value)))
+		{
+			nombresResultVLSM.Add(item.Key);
+			hostsResultVLSM.Add(item.Value);
+		}
+		redesResult = redes;
+		broadcastResult = broadcast;
+		rangosResult = rango;
+
+		calculado = true;
+
 	}
 
 	public void GuardarDatos(int mascara, string[] ipesDecimal, int hosts, int subredes)
@@ -352,7 +505,6 @@ else
 
 			//nombresResult[i] = listaSubredes[i].Nombre ?? "Red Libre";
 
-			Console.WriteLine(redes[i] + "//" + rango[i] + "//" + broadcast[i]);
 		}
 		nombresResult = nombres;
 		redesResult = redes;
