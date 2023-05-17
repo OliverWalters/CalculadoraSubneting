@@ -43,7 +43,7 @@
 			}
 			else
 			{
-						<button @onclick="Calcular">Enviar VLSM</button>
+						<button @onclick="CalcularVLSM">Enviar VLSM</button>
 			}
 		</td>
 	</tr>
@@ -98,8 +98,6 @@ else
 	public bool tamanoPosible = true;
 	public bool VLSM;
 	public bool calculado;
-	public string[] listaNombres;
-	public string[] listaTamanos;
 	const int MASCARA_MAX = 32;
 	const int TAMANO_BYTE = 8;
 	const int DECIMAL_BYTE = 255;
@@ -219,18 +217,85 @@ else
 	}
 	public void CalcularVLSM()
 	{
+
 		if (Comprobar())
 		{
 			posible = true;
+			List<string> ipSeparada = new List<string>();
+			List<string> ipBinariaSeparada = new List<string>();
+			List<string> ipsResult = new List<string>();
 			string[] a = ip.Split('/');
-			int mascara = int.Parse(a[1]);
+			int mascaraInicial = int.Parse(a[1]);
 			string ipSinMascara = a[0];
 
-			string[] octetos = ipSinMascara.Split('.');
-			string[] octetosBinarios = new string[4];
+			foreach (var item in ipSinMascara.Split('.'))
+			{
+				ipSeparada.Add(item);
+			}
+			//hasta aqui hace los splits y demas
 
+			foreach (var item in ipSeparada)//convierte cada octeto a binario
+			{
+				ipBinariaSeparada.Add(PasarABinario(int.Parse(item)).PadLeft(8, '0'));
+			}
 
+			string ipBinaria = string.Empty;
+			foreach (string item in ipBinariaSeparada)//junta los octetos binarios
+			{
+				ipBinaria += item;
+			}
 
+			int bitsParaHostsYSubred = MASCARA_MAX - mascaraInicial;//calcula los bits restantes de la mascara inicial
+			string primerElementoLibre = string.Empty;//donde guardamos el primer elemento de la lista de Libres
+
+			for (int i = 0; i < bitsParaHostsYSubred; i++)//rellena el restante desde la mascara hasta el final con 0(primer elemento libre)
+			{
+				primerElementoLibre += "0";
+			}
+
+			List<string> ipsLibres = new List<string>();
+			ipsLibres.Add(primerElementoLibre);//añadimos primer elemento libre
+
+			string substring1 = ipBinaria.Substring(0, ipBinaria.Length - bitsParaHostsYSubred);//para cambiar lo que no es la mascara por 0s
+			string primeraDeRed = substring1 + primerElementoLibre;
+			ipsResult.Add(primeraDeRed);
+			List<int> hosts = new List<int>();
+			foreach(var item in listaSubredes)
+			{
+				hosts.Add(item.Tamano);
+			}
+			int hostMayor = hosts.Max(x => x);//cogemos el siguiente host mas grande y lo borramos
+			hosts.Remove(hosts.Max(x => x));
+			int bitsHostMayor = CalcularPotencia(hostMayor);//calcula los bits necesarios para el host
+
+			ipsLibres.OrderBy(x => PasarADecimal(x));//ordenamos la lista de ips libres para coger el mas pequño en cada interaccion
+			string ipLibreMenor = string.Empty;
+			bool cogido = false;
+
+			for (int i = 0; i < ipsLibres.Count && !cogido; i++)//bucle para coger la iplibre con menos tamaño pero que quepa y borrarlo de la lista
+			{
+				int contadorCeros = 0;
+				for (int j = ipsLibres[i].Length - 1; j >= 0; j--)//contador de ceros a la derecha para ver si caben los bits de host en la ip libre
+				{
+					if (ipsLibres[i][j] == '0')
+					{
+						contadorCeros++;
+					}
+				}
+				if (contadorCeros >= bitsHostMayor)
+				{
+					ipLibreMenor = ipsLibres[i];
+					ipsLibres.Remove(ipsLibres[i]);
+					cogido = true;
+				}
+			}
+
+			string binarioDeHosts = string.Empty;
+
+			for (int i = 0; i < bitsHostMayor; i++)//depende del tamaño que necesite(bits) lo rellena de 1s
+			{
+				binarioDeHosts += "1";
+			}
 		}
 		else
 		{
@@ -240,6 +305,17 @@ else
 
 	}
 
+	public int CalcularPotencia(int subredes)//true
+	{
+		int subRedesNecesarias = 1;
+		int potencia = 0;
+		while (subRedesNecesarias < subredes)
+		{
+			subRedesNecesarias *= 2;
+			potencia++;
+		}
+		return potencia;
+	}
 
 	public void GuardarDatos(int mascara, string[] ipesDecimal, int hosts, int subredes)
 	{
