@@ -140,8 +140,8 @@ else
 				subRedesNecesarias *= 2;
 				bitsNecesarios++;
 			}
-			int tamanoMaximo = (DECIMAL_BYTE + 1) / subRedesNecesarias;
-			tamanoPosible = listaSubredes.Max(x => x.Tamano) <= tamanoMaximo - 2; //el bool de si es posible o no guarda v si el tamaño k el pasa es <= que el necesario
+			//int tamanoMaximo = (DECIMAL_BYTE + 1) / subRedesNecesarias;
+			//tamanoPosible = listaSubredes.Max(x => x.Tamano) <= tamanoMaximo - 2; //el bool de si es posible o no guarda v si el tamaño k el pasa es <= que el necesario
 
 			//Aqui separamos la mascara de la ip normal
 			string[] a = ip.Split('/');
@@ -169,6 +169,7 @@ else
 			int totalHosts = int.Parse(Math.Pow(2, numeroBitsHosts + bitsNecesarios).ToString());//PasarADecimal(bitsParaHosts)+1 ;// comprobar si hay que sumar uno ya que no es lo mismo 2^8 que 8bits lleno de 1 a decimal
 
 			int hostsCadaSubred = totalHosts / subRedesNecesarias;//host por cada subres
+			tamanoPosible = listaSubredes.Max(x => x.Tamano) <= hostsCadaSubred -2 && hostsCadaSubred -2 >= 1; //el bool de si es posible o no guarda v si el tamaño k el pasa es <= que el necesario
 
 			string[] ipesBinario = new string[subRedesNecesarias + 1];
 			for (int i = 0; i < ipesBinario.Length; i++)
