@@ -222,7 +222,12 @@ else
 		if (Comprobar())
 		{
 			posible = true;
+			string[] a = ip.Split('/');
+			int mascara = int.Parse(a[1]);
+			string ipSinMascara = a[0];
 
+			string[] octetos = ipSinMascara.Split('.');
+			string[] octetosBinarios = new string[4];
 
 
 
